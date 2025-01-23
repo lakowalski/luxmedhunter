@@ -29,6 +29,7 @@ class LuxmedApi:
     GET_FORGERY_TOKEN_URL = 'https://portalpacjenta.luxmed.pl/PatientPortal/NewPortal/security/getforgerytoken'
     RESERVATION_LOCK_TERM_URL = "https://portalpacjenta.luxmed.pl/PatientPortal/NewPortal/reservation/lockterm"
     RESERVATION_CONFIRM_URL = "https://portalpacjenta.luxmed.pl/PatientPortal/NewPortal/reservation/confirm"
+    RESERVATION_CHANGE_TERM_URL = "https://portalpacjenta.luxmed.pl/PatientPortal/NewPortal/reservation/changeterm"
 
     def __init__(self, email, password):
         logger.info("Initializing LuxMedApi.")
@@ -215,7 +216,7 @@ class LuxmedApi:
         logger.info("Term locked successfully for reservation.")
         return reservation_lock["value"]
 
-    def create_reservation(self, appointment: Dict, lock: Dict, allow_rescheduling: bool = False) -> Dict:
+    def create_reservation(self, appointment: Dict, lock: Dict) -> Dict:
         """Create reservation for the given appointment."""
         payload = {
             "serviceVariantId": appointment['serviceId'],
@@ -227,10 +228,41 @@ class LuxmedApi:
             "doctorId": appointment['doctor']['id'],
             "temporaryReservationId": lock['temporaryReservationId'],
             "valuation": lock['valuations'][0],
-            "referralRequired": allow_rescheduling
+            "referralRequired": False
         }
 
         reservation = self._post(self.RESERVATION_CONFIRM_URL, json=payload, headers={"Content-Type": "application/json"})
+    
+        if reservation.get("errors"):
+            raise LuxmedApiError(f"Error in reservation creation: {reservation['errors']}")
+        
+        logger.info("Reservation successful.")
+        return reservation
+    
+    def change_reservation(self, appointment: Dict, lock: Dict) -> Dict:
+        """Change reservation term for the given appointment."""
+        related_visits = lock.get('relatedVisits', [])
+        if not len(related_visits):
+            raise LuxmedApiError(f"Error in reservation change: lock does not have related. Lock: {lock}")
+
+        payload = {
+            "existingReservationId": related_visits[0]['reservationId'],
+            "term": {
+                "serviceVariantId": appointment['serviceId'],
+                "facilityId": appointment['clinicId'],
+                "roomId": appointment['roomId'],
+                "scheduleId": appointment['scheduleId'],
+                "date": appointment['dateTimeFrom'].astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+                "timeFrom": appointment['dateTimeFrom'].strftime("%H:%M"),
+                "doctorId": appointment['doctor']['id'],
+                "temporaryReservationId": lock['temporaryReservationId'],
+                "valuation": lock['valuations'][0],
+                "referralRequired": False,
+                "parentReservationId": related_visits[0]['reservationId']
+            }
+        }
+
+        reservation = self._post(self.RESERVATION_CHANGE_TERM_URL, json=payload, headers={"Content-Type": "application/json"})
     
         if reservation.get("errors"):
             raise LuxmedApiError(f"Error in reservation creation: {reservation['errors']}")

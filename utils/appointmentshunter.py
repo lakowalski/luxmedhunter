@@ -87,8 +87,23 @@ class LuxmedAppointmentHunter:
                     if terms:
                         # Attempt to reserve the first available appointment
                         term = terms[0]
-                        lock = self.api.create_reservation_lock_term(term)
-                        reservation = self.api.create_reservation(term, lock)
+                        lock = session.create_reservation_lock_term(term)
+
+                        # Check related visits
+                        related_visits = lock.get('relatedVisits', [])
+
+                        if len(related_visits):
+                            # Check is allowing rescheduling
+                            if not appointment.allow_rescheduling:
+                                logger.error(f"Appointment {appointment.id} ({appointment.comment}) have already scheduled visit and is not allowed to rescheduled. Changing appointment status to ERROR.")
+                                appointment.status = AppointmentStatus.error
+                                appointment.next_check = 0
+                                update_appointment(appointment.id, appointment)
+                                continue
+                            # Reschedule reservation term
+                            reservation = session.change_reservation(term, lock)
+                        else: # Create reservation
+                            reservation = session.create_reservation(term, lock)
 
                         appointment.status = AppointmentStatus.reserved
                         appointment.next_check = 0

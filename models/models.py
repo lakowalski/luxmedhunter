@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 class AppointmentStatus(IntEnum):
     active = 1
     reserved = 2
+    error = 99
 
 class AppointmentQuery(BaseModel):
     city_id: int
@@ -27,6 +28,7 @@ class Appointment(BaseModel):
     comment: Optional[str] = None
     next_check: int = 0
     check_frequency: int
+    allow_rescheduling: bool = False
     term: Optional[Dict] = None
 
 class LuxmedCredentials(BaseModel):
