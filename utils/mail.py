@@ -1,6 +1,8 @@
 
 import smtplib
 import requests
+import boto3
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 from loguru import logger
 
 class MailHandler:
@@ -36,6 +38,37 @@ class MailHandler:
             )
         logger.info("Email notification sent.")
 
+    def _send_mail_ses(self, subject: str, message: str, recipients: str):
+        """Send email using AWS SES."""
+        ses_config = self.config['ses']
+        session_config = ses_config.get('session', {})
+        ses_client = boto3.Session(**session_config).client('ses')
+
+        try:
+            response = ses_client.send_email(
+                Source=ses_config['sender'],
+                Destination={
+                    'ToAddresses': recipients.split(','),
+                },
+                Message={
+                    'Subject': {
+                        'Data': subject,
+                    },
+                    'Body': {
+                        'Text': {
+                            'Data': message,
+                        },
+                    },
+                },
+            )
+            logger.info(f"Email sent via SES. Response: {response}")
+        except NoCredentialsError:
+            logger.error("Error: No AWS credentials found. Please configure your credentials.")
+        except PartialCredentialsError:
+            logger.error("Error: Incomplete AWS credentials configuration.")
+        except Exception as e:
+            logger.error(f"Error sending email via SES: {e}")
+
     def send_mail(self, subject: str, message: str):
         """Send email notifications about found appointments."""
         config = self.config
@@ -45,5 +78,7 @@ class MailHandler:
             return self._send_mail_smtp(subject, message, recipients)
         elif config['provider'] == "MAILGUN":
             return self._send_mail_mailgun(subject, message, recipients)
+        elif config['provider'] == "SES":
+            return self._send_mail_ses(subject, message, recipients)
         
         raise Exception(f"Unhandled email provider {config['provider']}")

@@ -15,7 +15,13 @@ notifications:
   mail:
     enable: true
     recipients: user@gmail.com
-    provider: MAILGUN
+    provider: SES
+    ses:
+      sender: sender@domain.com
+      session:
+        aws_access_key_id: "AKIAXXXXXXXXXXXXXXXX"
+        aws_secret_access_key: "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"
+        region_name: "eu-west-1"
     mailgun:
       domain: sandbox1234567890abcdefgh.mailgun.org
       apikey: abcdef0123456789012-12345678-12345678

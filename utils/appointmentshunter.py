@@ -1,12 +1,11 @@
 from datetime import datetime, timedelta
-import pathlib
 import time
-import yaml
 import traceback
 from typing import Any, Dict, List
 from loguru import logger
 import schedule
 import json
+from .config import load_configuration
 from .luxmedapi import LuxmedApi
 from .mail import MailHandler
 from .db import *
@@ -18,7 +17,7 @@ class LuxmedAppointmentHunterError(Exception):
 class LuxmedAppointmentHunter:
     def __init__(self, config_file: str):
         logger.info("Initializing LuxMedAppointmentHunter.")
-        self.config = self._load_configuration(config_file)
+        self.config = load_configuration(config_file)
         self.sessions = {}
 
         # init database
@@ -28,13 +27,6 @@ class LuxmedAppointmentHunter:
         # init mail handler
         if self.config['notifications']['mail']['enable']:
             self.mail = MailHandler(self.config['notifications']['mail'])
-
-    def _load_configuration(self, config_file: str) -> Dict[str, Any]:
-        """Load and merge configurations from multiple YAML files."""
-        config = {}
-        with pathlib.Path(config_file).expanduser().open(encoding="utf-8") as stream:
-            config = yaml.safe_load(stream)
-        return config
 
     def _get_appointments_terms(self, session, params) -> List[Dict]:
         """Fetch and filter appointments based on configuration."""
