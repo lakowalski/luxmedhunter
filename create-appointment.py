@@ -6,10 +6,12 @@ init_database('database.json')
 appointment = Appointment(**{
     "comment": "internistapoz-20250105",
     "status": AppointmentStatus.active,
-    "account_email": "lukasz.a.kowalski@gmail.com",
+    "account_email": "user@gmail.com",
     "check_frequency": 300,
-    "query": {
-        "city_id": 8,       
+    # You can get those ids by reading form data sent to https://portalpacjenta.luxmed.pl/PatientPortal/Reservations/Reservation/PartialSearch
+    # on https://portalpacjenta.luxmed.pl/PatientPortal/Reservations/Reservation/Search by dev tools
+    "query": {          
+        "city_id": 8,             
         "service_id": 9242,
         "facilities_ids": [],
         "doctor_ids": [],

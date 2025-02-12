@@ -1,4 +1,4 @@
-# Luxmed Snip
+# Luxmed Hunter
 
 ## Install
 ```
@@ -13,7 +13,7 @@ Create a `config.yaml` file.
 database_file: database.json
 notifications:
   mail:
-    enable: true
+    enable: true # If you would like to get notifications after hunted appointment
     recipients: user@gmail.com
     provider: SES
     ses:
@@ -31,6 +31,12 @@ notifications:
       email: username@server.com
       password: password
 ```
+
+# Database
+Database is stored localy in the file set in the config file, default `database.json`.
+
+# Add appointment
+Check script `create-appointment.py`. Fill the data and execute them.
 
 # Launch
 On-time check.

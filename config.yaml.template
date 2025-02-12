@@ -1,0 +1,4 @@
+database_file: database.json
+notifications:
+  mail:
+    enable: false
