@@ -1,1 +1,1 @@
-from .models import AppointmentStatus, Appointment, LuxmedCredentials
+from .models import AppointmentStatus, Appointment, AppointmentQuery, LuxmedCredentials 

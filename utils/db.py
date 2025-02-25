@@ -19,6 +19,11 @@ def init_database(database_path):
 def list_appointments() -> List[Appointment]:
     return [Appointment(**row) for row in appointments_table.all()]
 
+def list_user_appointments(email: str) -> List[Appointment]:
+    AppointmentQuery = Query()
+    results = appointments_table.search(AppointmentQuery.account_email == email)
+    return [Appointment(**row) for row in results]
+
 def get_appointments_to_check() -> List[Appointment]:
     AppointmentQuery = Query()
     results = appointments_table.search((AppointmentQuery.status != AppointmentStatus.reserved) \
@@ -41,17 +46,21 @@ def update_appointment(appointment_id: str, appointment: Appointment) -> Optiona
     return get_appointment(appointment_id) if result else None
 
 def delete_appointment(appointment_id: str) -> bool:
-    result = appointments_table.remove(id=[appointment_id])
+    AppointmentQuery = Query()
+    result = appointments_table.remove(AppointmentQuery.id == appointment_id)
     return bool(result)
 
 def get_luxmed_credentials(email: str) -> Optional[LuxmedCredentials]:
     Credentails = Query()
     result = luxmed_credentials_table.get(Credentails.email == email)
-    if not result:
-        raise ValueError(f"No credentials found for email: {email}")
     return LuxmedCredentials(**result) if result else None
 
 def create_luxmed_credentials(email: str, password: str) -> LuxmedCredentials:
     credentials = { "email": email, "password": password }
     luxmed_credentials_table.insert(credentials)
     return LuxmedCredentials(**credentials)
+
+def delete_luxmed_credentials(email: str) -> bool:
+    Credentials = Query()
+    result = luxmed_credentials_table.remove(Credentials.email == email)
+    return bool(result)

@@ -1,6 +1,6 @@
 import logging
 import sys
-import argparse
+import click
 from loguru import logger
 from utils.appointmentshunter import LuxmedAppointmentHunter
 
@@ -12,23 +12,21 @@ def setup_logging():
 
     logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO, force=True)
     logger.remove()
-    logger.add(sys.stdout, level="DEBUG") ## TODO: INFO
+    logger.add(sys.stdout, level="DEBUG")  # TODO: INFO
     logger.add("debug.log", format="{time} - {message}", rotation="1 week", serialize=True)
 
-def main():
+@click.command()
+@click.option('-c', '--config', default="config.yaml", multiple=True, help="Configuration file path")
+@click.option('-d', '--delay', type=int, default=None, help="Delay in fetching updates [s]")
+def main(config, delay):
     setup_logging()
     logger.info("LuxMedAppointmentHunter - Appointment Hunting Script")
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-c", "--config", help="Configuration file path", default="config.yaml", nargs="*")
-    parser.add_argument("-d", "--delay", type=int, help="Delay in fetching updates [s]", default=None)
-    args = parser.parse_args()
-
-    hunter = LuxmedAppointmentHunter(config_file=args.config)
-    if args.delay:
-        hunter.run_scheduler(interval=args.delay)
+    hunter = LuxmedAppointmentHunter(config_file=config)
+    if delay:
+        hunter.run_scheduler(interval=delay)
     else:
         hunter.hunt_appointments()
-        
+
 if __name__ == "__main__":
     main()

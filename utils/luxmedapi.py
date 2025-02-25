@@ -2,7 +2,7 @@ import datetime
 import json
 import requests
 import jwt
-from typing import Any, Dict, List
+from typing import Dict, List
 from loguru import logger
 
 class LuxmedApiError(Exception):
@@ -30,6 +30,7 @@ class LuxmedApi:
     RESERVATION_LOCK_TERM_URL = "https://portalpacjenta.luxmed.pl/PatientPortal/NewPortal/reservation/lockterm"
     RESERVATION_CONFIRM_URL = "https://portalpacjenta.luxmed.pl/PatientPortal/NewPortal/reservation/confirm"
     RESERVATION_CHANGE_TERM_URL = "https://portalpacjenta.luxmed.pl/PatientPortal/NewPortal/reservation/changeterm"
+    RECENT_SEARCH_TERMS_URL = 'https://portalpacjenta.luxmed.pl/PatientPortal/NewPortal/RecentSearchTermsParameters/recentSearchData'
 
     def __init__(self, email, password):
         logger.info("Initializing LuxMedApi.")
@@ -52,9 +53,15 @@ class LuxmedApi:
         }
 
         response = self.session.post(self.LUXMED_LOGIN_URL, json=payload, headers={"Content-Type": "application/json"})
-        response.raise_for_status()
-
-        token = response.json().get("token")
+        
+        if response.status_code != 200:
+            raise LuxmedApiError(f"Login failed: {response.text}")
+        
+        response_data = response.json()
+        if not response_data.get("succeded", True):
+            raise LuxmedApiError(f"Login failed: {response_data.get('errorMessage', 'Unknown error')}")
+       
+        token = response_data.get("token")
         if not token:
             raise LuxmedApiError("Login failed: Token not received.")
         
@@ -269,3 +276,15 @@ class LuxmedApi:
         
         logger.info("Reservation successful.")
         return reservation
+
+    def get_recent_search_parameters(self) -> dict:
+        """Fetch recent search terms data."""
+        params = {
+            "includeRecentSearchParameters": "true"
+        }
+        response = self._get(self.RECENT_SEARCH_TERMS_URL, params=params)
+        
+        if response.get("errors"):
+            raise LuxmedApiError(f"Error fetching recent search terms: {response['errors']}")
+        
+        return response.get("searchParameters", [])

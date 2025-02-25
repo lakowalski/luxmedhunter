@@ -7,3 +7,4 @@ PyJWT==2.10.1
 tinydb==4.8.2
 pydantic==2.10.4
 boto3==1.36.5
+click==8.1.8
