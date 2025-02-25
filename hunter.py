@@ -16,7 +16,7 @@ def setup_logging():
     logger.add("debug.log", format="{time} - {message}", rotation="1 week", serialize=True)
 
 @click.command()
-@click.option('-c', '--config', default="config.yaml", multiple=True, help="Configuration file path")
+@click.option('-c', '--config', default="config.yaml", help="Configuration file path")
 @click.option('-d', '--delay', type=int, default=None, help="Delay in fetching updates [s]")
 def main(config, delay):
     setup_logging()
