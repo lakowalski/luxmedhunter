@@ -1,14 +1,15 @@
 # Luxmed Hunter
 
-## Install
-```
+## Installation
+To set up the environment, run the following commands:
+```sh
 python3 -m venv .venv
 source .venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
-## Make a config file
-Create a `config.yaml` file.
+## Configuration
+Create a `config.yaml` file with the following content:
 ```yaml
 database_file: database.json
 notifications:
@@ -32,24 +33,44 @@ notifications:
       password: password
 ```
 
-# Database
-Database is stored localy in the file set in the config file, default `database.json`.
+## Database
+The database is stored locally in the file specified in the config file, default is `database.json`.
 
-# Add appointment
-Check script `create-appointment.py`. Fill the data and execute them.
+## Commands
 
-# Launch
-On-time check.
+### Create Credentials
+Generate credentials for your Luxmed account:
+```sh
+python cli.py create-credentials user@domain.com
 ```
-hunter.py
+You will be prompted to enter your password securely.
+
+### Get Last Search
+Retrieve the last search parameters from the Luxmed Patient Portal:
+```sh
+python cli.py get-last-search user@domain.com
 ```
 
-Make a task executed in 15 minutes cycles.
-```
-hunter.py --delay 900
+### Create Appointment from Last Search
+Schedule an appointment based on the latests search parameters:
+```sh
+python cli.py create-appointment-from-last-search user@domain.com
 ```
 
-Put it to the background and store the logs.
+### Single On-Time Check
+Perform a one-time check for available appointments:
+```sh
+python hunter.py
 ```
+
+### Scheduled Checks
+Run the task in 15-minute cycles:
+```sh
+python hunter.py --delay 900
+```
+
+### Background Execution
+Run the task in the background and store the logs:
+```sh
 nohup python3 hunter.py --delay 900 >> logs.txt &
 ```
